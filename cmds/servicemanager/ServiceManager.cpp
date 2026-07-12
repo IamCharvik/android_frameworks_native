@@ -71,6 +71,10 @@ bool is_multiuser_uid_isolated(uid_t uid) {
     return appid >= AID_ISOLATED_START && appid <= AID_ISOLATED_END;
 }
 
+// Substring marker of aftermarket-identity service names that are hidden from unprivileged app
+// enumeration in listServices(). Named here so the "why" stays co-located with the value.
+constexpr const char* kHiddenEnumerationServiceMarker = "lineage";
+
 #ifndef VENDORSERVICEMANAGER
 
 struct ManifestWithDescription {
@@ -605,9 +609,18 @@ Status ServiceManager::addService(const std::string& name, const sp<IBinder>& bi
 Status ServiceManager::listServices(int32_t dumpPriority, std::vector<std::string>* outList) {
     SM_PERFETTO_TRACE_FUNC();
 
-    if (!mAccess->canList(mAccess->getCallingContext())) {
+    auto ctx = mAccess->getCallingContext();
+    if (!mAccess->canList(ctx)) {
         return Status::fromExceptionCode(Status::EX_SECURITY, "SELinux denied.");
     }
+
+    // Unprivileged app callers must not be able to enumerate aftermarket-identity services.
+    // System, root and shell callers (app id < AID_APP) still receive the full list, so
+    // dumpsys / 'service list' and system components are unaffected. This filters enumeration
+    // only; getService/checkService/waitForService continue to resolve these services by name.
+    // Use multiuser_get_app_id() (the file's canonical idiom, matching addService) so that
+    // system/root callers in secondary users are not misclassified as apps.
+    const bool filterAppVisibleServices = multiuser_get_app_id(ctx.uid) >= AID_APP;
 
     size_t toReserve = 0;
     for (auto const& [name, service] : mNameToService) {
@@ -623,6 +636,10 @@ Status ServiceManager::listServices(int32_t dumpPriority, std::vector<std::strin
         (void) service;
 
         if (service.dumpPriority & dumpPriority) {
+            if (filterAppVisibleServices
+                    && name.find(kHiddenEnumerationServiceMarker) != std::string::npos) {
+                continue;
+            }
             outList->push_back(name);
         }
     }
