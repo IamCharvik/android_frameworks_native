@@ -20,6 +20,9 @@
 #include <SkImage.h>
 #include <SkRuntimeEffect.h>
 #include <SkSurface.h>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include "BlurFilter.h"
 
 #include "RuntimeEffectManager.h"
@@ -48,6 +51,23 @@ private:
     sk_sp<SkRuntimeEffect> mQuarterResDownSampleBlurEffect;
     sk_sp<SkRuntimeEffect> mHalfResDownSampleBlurEffect;
     sk_sp<SkRuntimeEffect> mUpSampleBlurEffect;
+
+    static constexpr int kMaxSurfaces = 4;
+    static constexpr size_t kPoolCapacity = 3;
+
+    struct SurfaceSlot {
+        SkImageInfo info;
+        SkiaGpuContext* context = nullptr;
+        sk_sp<SkSurface> surface;
+        uint64_t lastUsedFrame = 0;
+    };
+
+    mutable std::array<std::array<SurfaceSlot, kPoolCapacity>, kMaxSurfaces> mPools;
+    mutable std::array<size_t, kMaxSurfaces> mCounts = {};
+    mutable uint64_t mFrameCounter = 0;
+
+    sk_sp<SkSurface> obtainSurface(SkiaGpuContext* context, const SkImageInfo& info,
+                                   int index) const;
 
     void blurInto(const sk_sp<SkSurface>& drawSurface, const sk_sp<SkImage>& readImage,
                   const float radius, const float alpha, const sk_sp<SkRuntimeEffect>&) const;
