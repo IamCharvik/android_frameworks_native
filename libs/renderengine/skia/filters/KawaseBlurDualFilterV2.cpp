@@ -250,7 +250,7 @@ void KawaseBlurDualFilterV2::blurInto(const sk_sp<SkSurface>& drawSurface, sk_sp
 sk_sp<SkImage> KawaseBlurDualFilterV2::generate(SkiaGpuContext* context, const uint32_t blurRadius,
                                                 const sk_sp<SkImage> input,
                                                 const SkRect& blurRect) const {
-    if (!context || !input || blurRadius == 0 || blurRect.isEmpty()) {
+    if (!context || !input || blurRect.isEmpty()) {
         return input;
     }
     ++mFrameCounter;
