@@ -65,6 +65,7 @@ private:
     mutable std::array<std::array<SurfaceSlot, kPoolCapacity>, kMaxSurfaces> mPools;
     mutable std::array<size_t, kMaxSurfaces> mCounts = {};
     mutable uint64_t mFrameCounter = 0;
+    const float mInputScale;
 
     sk_sp<SkSurface> obtainSurface(SkiaGpuContext* context, const SkImageInfo& info,
                                    int index) const;

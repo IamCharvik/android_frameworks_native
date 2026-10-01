@@ -138,7 +138,7 @@ const SkString kEffectSource_KawaseBlurDualFilterV2_UpSampleBlurEffect(R"(
 )");
 
 KawaseBlurDualFilterV2::KawaseBlurDualFilterV2(RuntimeEffectManager& effectManager)
-      : BlurFilter(effectManager) {
+      : BlurFilter(effectManager), mInputScale(readV2InputScale()) {
     mQuarterResDownSampleBlurEffect =
             effectManager.mKnownEffects[kKawaseBlurDualFilterV2_QuarterResDownSampleBlurEffect];
     mHalfResDownSampleBlurEffect =
@@ -255,8 +255,7 @@ sk_sp<SkImage> KawaseBlurDualFilterV2::generate(SkiaGpuContext* context, const u
     }
     ++mFrameCounter;
 
-    const float inputScale = readV2InputScale();
-    const float inverseInputScale = 1.0f / inputScale;
+    const float inputScale = mInputScale;
 
     // Apply a conversion factor of (1 / sqrt(3)) to match Skia's built-in blur as used by
     // RenderEffect. See the comment in SkBlurMask.cpp for reasoning behind this.
@@ -317,7 +316,7 @@ sk_sp<SkImage> KawaseBlurDualFilterV2::generate(SkiaGpuContext* context, const u
     // Start by downscaling and doing the first blur pass
     {
         // For sampling Skia's API expects the inverse of what logically seems appropriate. In this
-        // case one may expect Translate(blurRect.fLeft, blurRect.fTop) * Scale(inverseInputScale)
+        // case one may expect Translate(blurRect.fLeft, blurRect.fTop) * Scale(1/inputScale)
         // but instead we must do the inverse.
         SkMatrix blurMatrix = SkMatrix::Translate(-blurRect.fLeft, -blurRect.fTop);
         blurMatrix.postScale(inputScale, inputScale);
@@ -349,7 +348,7 @@ sk_sp<SkImage> KawaseBlurDualFilterV2::generate(SkiaGpuContext* context, const u
         blurInto(surfaces[i], tmp, step, std::min(1.0f, filterDepth - i), mUpSampleBlurEffect);
     }
 
-    sk_sp<SkImage> result = surfaces[0]->makeTemporaryImage();
+    sk_sp<SkImage> result = surfaces[0]->makeImageSnapshot();
     return result ? result : input;
 }
 

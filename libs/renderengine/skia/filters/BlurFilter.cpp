@@ -45,9 +45,10 @@ const SkString kEffectSource_BlurFilter_MixEffect(R"(
 )");
 
 static SkMatrix getShaderTransform(const SkCanvas* canvas, const SkRect& blurRect,
-                                   const float scale, const float zoomScale) {
+                                   const float scaleX, const float scaleY,
+                                   const float zoomScale) {
     // 1. Apply the blur shader matrix, which scales up the blurred surface to its real size
-    auto matrix = SkMatrix::Scale(scale, scale);
+    auto matrix = SkMatrix::Scale(scaleX, scaleY);
     // 2. Since the blurred surface has the size of the layer, we align it with the
     // top left corner of the layer position.
     matrix.postConcat(SkMatrix::Translate(blurRect.fLeft, blurRect.fTop));
@@ -86,7 +87,9 @@ void BlurFilter::drawBlurRegion(SkCanvas* canvas, const SkRRect& effectRegion,
     SkPaint paint;
     paint.setAlphaf(blurAlpha);
 
-    auto blurMatrix = getShaderTransform(canvas, blurRect, kInverseInputScale, zoomScale);
+    auto blurMatrix =
+            getShaderTransform(canvas, blurRect, blurRect.width() / blurredImage->width(),
+                               blurRect.height() / blurredImage->height(), zoomScale);
 
     SkSamplingOptions linearSampling(SkFilterMode::kLinear, SkMipmapMode::kNone);
     const auto blurShader = blurredImage->makeShader(SkTileMode::kMirror, SkTileMode::kMirror,
