@@ -62,6 +62,8 @@ public:
 
     float getMaxCrossFadeRadius() const;
 
+    virtual float getInputScale() const { return kInputScale; }
+
 private:
     // To avoid downscaling artifacts, we interpolate the blurred fbo with the full composited
     // image, up to this radius.

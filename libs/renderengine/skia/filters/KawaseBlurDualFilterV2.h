@@ -47,6 +47,8 @@ public:
     sk_sp<SkImage> generate(SkiaGpuContext* context, const uint32_t radius,
                             const sk_sp<SkImage> blurInput, const SkRect& blurRect) const override;
 
+    float getInputScale() const override { return mInputScale; }
+
 private:
     sk_sp<SkRuntimeEffect> mQuarterResDownSampleBlurEffect;
     sk_sp<SkRuntimeEffect> mHalfResDownSampleBlurEffect;

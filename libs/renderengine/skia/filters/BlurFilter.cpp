@@ -87,9 +87,8 @@ void BlurFilter::drawBlurRegion(SkCanvas* canvas, const SkRRect& effectRegion,
     SkPaint paint;
     paint.setAlphaf(blurAlpha);
 
-    auto blurMatrix =
-            getShaderTransform(canvas, blurRect, blurRect.width() / blurredImage->width(),
-                               blurRect.height() / blurredImage->height(), zoomScale);
+    auto blurMatrix = getShaderTransform(canvas, blurRect, 1.f / getInputScale(),
+                                            1.f / getInputScale(), zoomScale);
 
     SkSamplingOptions linearSampling(SkFilterMode::kLinear, SkMipmapMode::kNone);
     const auto blurShader = blurredImage->makeShader(SkTileMode::kMirror, SkTileMode::kMirror,
