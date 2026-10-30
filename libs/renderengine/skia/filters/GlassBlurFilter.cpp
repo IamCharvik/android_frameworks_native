@@ -190,9 +190,11 @@ void GlassBlurFilter::blurInto(const sk_sp<SkSurface>& drawSurface,
     canvas->drawPaint(paint);
 }
 
-sk_sp<SkImage> GlassBlurFilter::generate(SkiaGpuContext* context, const uint32_t blurRadius,
-                                          const sk_sp<SkImage> input,
-                                          const SkRect& blurRect) const {
+sk_sp<SkImage> GlassBlurFilter::generateTemporaryImage(SkiaGpuContext* context,
+                                                       const DisplaySettings& /*display*/,
+                                                       const uint32_t blurRadius,
+                                                       const sk_sp<SkImage> input,
+                                                       const SkRect& blurRect) const {
     if (!context || !input) {
         return nullptr;
     }

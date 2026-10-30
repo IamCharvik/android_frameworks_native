@@ -75,6 +75,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <deque>
 #include <memory>
 #include <numeric>
